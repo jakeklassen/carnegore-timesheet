@@ -1,4 +1,5 @@
 import { cac } from 'cac';
+import { createArrayCsvWriter } from 'csv-writer';
 import expect from 'expect';
 import fs from 'fs';
 import marked from 'marked-ast';
@@ -18,7 +19,7 @@ cli
     default: false,
   })
   .usage(`${NAME} path/to/log.md path/to/log.csv`)
-  .action((markdownFilePath, csvFilePath, options) => {
+  .action(async (markdownFilePath, csvFilePath, options) => {
     const markdownFile = fs.readFileSync(markdownFilePath).toString('utf-8');
     const ast = marked.parse(markdownFile);
 
@@ -141,17 +142,25 @@ cli
       })
       .filter((row): row is any[] => row != null);
 
-    console.log([
-      [
+    const csvWriter = createArrayCsvWriter({
+      header: [
         'Date (mm/dd/yyyy)',
         'Ticket # (optional)',
         'Description',
         'Total Hours',
         'Month Total',
       ],
+      path: csvFilePath,
+    });
+
+    const csvData = [
       ...days,
       ['', '', '', '', days.reduce((acc, [, , , hours]) => acc + hours, 0)],
-    ]);
+    ];
+
+    await csvWriter.writeRecords(csvData);
+
+    console.log(csvData);
   });
 
 cli.help();

@@ -6,3 +6,4 @@ coverage
 pkg
 *.log
 .vscode
+files/*.csv
