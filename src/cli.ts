@@ -19,12 +19,11 @@ cli
   })
   .usage(`${NAME} path/to/log.md path/to/log.csv`)
   .action((markdownFilePath, csvFilePath, options) => {
-    console.log(markdownFilePath, csvFilePath, options);
-
     const markdownFile = fs.readFileSync(markdownFilePath).toString('utf-8');
     const ast = marked.parse(markdownFile);
 
     if (options.verbose === true) {
+      console.log(markdownFilePath, csvFilePath, options);
       console.dir(ast, { depth: null, colors: true });
     }
 
@@ -47,82 +46,84 @@ cli
           if (nextDayIdx - idx === 1) {
             console.warn(`Empty day log! ${row.raw}`);
 
-            return null;
+            return;
           }
 
-          const data = {
+          return {
             titleData: row,
             logData: astRows.slice(
               idx,
               nextDayIdx === -1 ? astRows.length : nextDayIdx,
             ),
           };
-
-          return data;
         }
 
-        return null;
+        return;
       })
-      .filter(day => day != null)
-      .map((day: any) => {
-        const { titleData, logData }: { titleData: any; logData: any[] } = day;
-        const row = [new Date(titleData.raw)];
+      .filter((day): day is { titleData: any; logData: any[] } => day != null)
+      .map(day => {
+        const { titleData, logData } = day;
 
-        const tickets = logData.reduce((acc, el, idx, col) => {
+        const tickets = logData.reduce((acc, el, idx, elements) => {
           try {
-            expect(el).toMatchObject({
-              type: 'paragraph',
-              text: expect.arrayContaining([
-                expect.objectContaining({
-                  type: 'link',
-                  text: expect.arrayContaining([
-                    expect.stringMatching(/(IOTP-\d+)/),
-                  ]),
-                }),
-              ]),
-            });
+            const tuple = [el, elements[idx + 1]];
 
-            const nextEl = col[idx + 1];
+            expect(tuple).toEqual([
+              expect.objectContaining({
+                type: 'paragraph',
+                text: expect.arrayContaining([
+                  expect.objectContaining({
+                    type: 'link',
+                    text: expect.arrayContaining([
+                      expect.stringMatching(/(IOTP-\d+)/),
+                    ]),
+                  }),
+                ]),
+              }),
 
-            expect(nextEl).toMatchObject({
-              type: 'blockquote',
-              quote: expect.arrayContaining([
-                expect.objectContaining({
-                  type: 'paragraph',
-                  text: expect.arrayContaining([expect.any(String)]),
-                }),
-              ]),
-            });
-
-            const summary = nextEl.quote[0].text[0];
+              expect.objectContaining({
+                type: 'blockquote',
+                quote: expect.arrayContaining([
+                  expect.objectContaining({
+                    type: 'paragraph',
+                    text: expect.arrayContaining([expect.any(String)]),
+                  }),
+                ]),
+              }),
+            ]);
 
             return acc.concat({
               id: el.text[0].text[0],
-              summary,
+              summary: tuple[1].quote[0].text[0],
             });
           } catch (error) {
             return acc;
           }
         }, []);
 
-        const tasks = logData.reduce((acc, el, idx, col) => {
-          if (el.type === 'paragraph' && typeof el.text[0] === 'string') {
-            if (el.text[0].startsWith('Tasks')) {
-              const nextEl = col[idx + 1];
+        const tasks = logData.reduce((acc, el, idx, elements) => {
+          try {
+            const tuple = [el, elements[idx + 1]];
 
-              if (nextEl.type === 'list') {
-                return acc.concat(
-                  ...nextEl.body
-                    .filter(listitem)
-                    .map((item: any) =>
-                      item.text.filter((text: any) => text !== ''),
-                    ),
-                );
-              }
-            }
+            expect(tuple).toEqual([
+              expect.objectContaining({
+                type: 'paragraph',
+                text: expect.arrayContaining([expect.stringMatching(/^Tasks/)]),
+              }),
+              expect.objectContaining({
+                type: 'list',
+                body: expect.any(Array),
+              }),
+            ]);
+
+            const items = tuple[1].body
+              .filter(listitem)
+              .map((item: any) => item.text.filter((text: any) => text !== ''));
+
+            return acc.concat(items);
+          } catch {
+            return acc;
           }
-
-          return acc;
         }, []);
 
         if (tickets.length === 0) {
@@ -132,13 +133,13 @@ cli
         const hours = getHours(logData);
 
         return [
-          ...row,
+          new Date(titleData.raw),
           [...tickets.map((ticket: any) => ticket.id)].join(' '),
           [...tickets.map((ticket: any) => ticket.summary), ...tasks].join(' '),
           hours,
         ];
       })
-      .filter(row => row != null);
+      .filter((row): row is any[] => row != null);
 
     console.log([
       [
@@ -146,8 +147,10 @@ cli
         'Ticket # (optional)',
         'Description',
         'Total Hours',
+        'Month Total',
       ],
       ...days,
+      ['', '', '', '', days.reduce((acc, [, , , hours]) => acc + hours, 0)],
     ]);
   });
 

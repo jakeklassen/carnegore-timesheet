@@ -1309,10 +1309,10 @@ builtin-modules@^3.0.0:
   resolved "https://registry.yarnpkg.com/builtin-modules/-/builtin-modules-3.1.0.tgz#aad97c15131eb76b65b50ef208e7584cd76a7484"
   integrity sha512-k0KL0aWZuBt2lrxrcASWDfwOLMnodeQjodT/1SxEQAXsHANgo6ZC/VEaSEHCXt7aSTZ4/4H5LKa+tBXmW7Vtvw==
 
-cac@^6.5.1:
-  version "6.5.1"
-  resolved "https://registry.yarnpkg.com/cac/-/cac-6.5.1.tgz#c5685ebc20a8448558191d70a2a76636640308a0"
-  integrity sha512-mqKv0Ub/nXSoqlACRvrso3k7+nCdzUNimdh+3l0ywDNt27d/x5s/zEg2Ubf1MrsV5Q/DncxtXhNJLrJN6zq1jQ==
+cac@^6.5.2:
+  version "6.5.2"
+  resolved "https://registry.yarnpkg.com/cac/-/cac-6.5.2.tgz#92ef1490b9ffde5f0be7eeadec5ea926f0e78ef6"
+  integrity sha512-8JdiD9/ZLsG418j/chyZQ3VWuhFELSGlH4EUxzNKgIH8wK8dO0j5Pqu6Pk7B/RP3kX9aasyQhPrrUjYO5e0w7w==
 
 cache-base@^1.0.1:
   version "1.0.1"
