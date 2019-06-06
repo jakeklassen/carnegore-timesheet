@@ -5,7 +5,7 @@ Process Markdown to CSV for timesheets.
 ## Usage
 
 ```
-$ carnegore-timesheet files/sample-worklog.md files/sample-worklog2.csv
+$ carnegore-timesheet files/sample-worklog.md files/sample-worklog.csv
 ```
 
 This follows a specific markdown format to create the CSV:
